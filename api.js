@@ -1,6 +1,6 @@
-if (process.env.NODE_ENV !== 'development') {
-  console.debug = function() {};  // 本番環境ではdebugを無効化
-}
+// if (process.env.NODE_ENV !== 'development') {
+  // console.debug = function() {};  // 本番環境ではdebugを無効化
+// }
 
 const { Mutex } = require("async-mutex");
 const fs = require("fs");
