@@ -1,6 +1,6 @@
-// if (process.env.NODE_ENV !== 'development') {
-  // console.debug = function() {};  // 本番環境ではdebugを無効化
-// }
+if (process.env.development !== 'true') {
+    console.debug = function() {};  // 本番環境ではdebugを無効化
+}
 
 const { Mutex } = require("async-mutex");
 const fs = require("fs");
@@ -22,9 +22,6 @@ async function loadDatabase(name) {
     release();
 }
 
-/*
- * After using, db is absolutely null;
-*/
 async function unloadDatabase() {
     console.debug("call unload database");
     if (db != null) {
