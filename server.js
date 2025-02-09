@@ -18,7 +18,7 @@ app.use(cors({
         }
     },
     methods: ["POST", "GET"],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type']
 }))
 
 let current_season = "default.db";
@@ -34,30 +34,8 @@ setInterval(() => {
 }, 1 * 60 * 1000);
 saveToCache();
 
-app.get("/api/static_data", (req, res) => {
-    console.log("request static data");
-    try {
-        const cachefile = `./caches/${current_season}.json`;
-
-        if (!fs.existsSync(cachefile)) {
-            return res.send("{}").status(200);
-        }
-
-        const secondUtilEndOfDay = Math.floor((calculateEndOfDay() - Date.now()) / 1000);
-
-        const data = fs.readFileSync(cachefile);
-        return res.set("Cache-Control", `public max-age=${secondUtilEndOfDay}, immutable`).send(data).status(200);
-    } catch (e) {
-        res.send("{}").status(200);
-    }
-})
-
 app.get("/api/current_data", (req, res) => {
-    getAllUsers().then(data => {
-        res.set("Cache-Control", "no-store, no-cache, must-revalidate").send(data).status(200);
-    }).catch(err => {
-        res.send(err).status(500);
-    });
+    res.send(readDataWithCache(`./caches/${current_season}.json`)).status(200);
 })
 
 app.post("/api/update_data", (req, res) => {
@@ -77,6 +55,31 @@ app.post("/api/update_data", (req, res) => {
 function calculateEndOfDay() {
     return ((Math.floor(Date.now() / day) + 1) * day) - 1;
 }
+
+let cachedData = null;
+let cachedTime = null;
+function readDataWithCache(path) {
+    fs.stat(path, (err, stats) => {
+        if (err) {
+            return null;
+        }
+
+        if (!cachedTime || stats.mtime > cachedTime) {
+            fs.readFile(path, 'utf8', (err, data) => {
+                if (err) {
+                    console.error("Error reading file:", err);
+                    return;
+                }
+
+                cachedData = data;
+                cachedTime = stats.mtime;
+            });
+        }
+
+        return cachedData;
+    });
+}
+
 
 app.listen(5678, () => {
     console.log("server listening 5678")
